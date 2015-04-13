@@ -360,22 +360,42 @@ QVector<QLineF> Viewer::parametrizedBoundaryIntersection(const QVector<QLineF> &
 
     if(fix)
     {
-        //Processing:
-        // 1. Detect and mark inversions
-        qSort(aux.begin(), aux.end());
-        k=0;
-        for (QMap<int,int>::iterator it=riMap.begin(); it!=riMap.end(); ++it)
-        {
-                if (it.value()!=-1)
-                {
-                    if(it.value()!=aux[k])
-                    {
-                        it.value() = -1;
-                    }
-                    k++;
-                }
 
+        //Processing:
+        // 1. Detect and mark intersections
+        for (int ix=0; ix<answer.size(); ix++)
+        {
+            for (int jx=ix; jx<answer.size(); jx++)
+            {
+                if(ix==jx)
+                    continue;
+                if(answer[ix].intersect(answer[jx],p)==QLineF::BoundedIntersection)
+                {
+                    riMap[ix] = -1;
+                    riMap[jx] = -1;
+                }
+            }
         }
+
+//        //Processing: /// NOT DOING THIS ANYMORE
+//        // 1. Detect and mark inversions
+//        qSort(aux.begin(), aux.end());
+//        k=0;
+//        for (QMap<int,int>::iterator it=riMap.begin(); it!=riMap.end(); ++it)
+//        {
+//                if (it.value()!=-1)
+//                {
+//                    if(it.value()!=aux[k])
+//                    {
+//                        it.value() = -1;
+//                    }
+//                    k++;
+//                }
+
+//        }
+
+
+
 
         // 2. Fix inversions and points with no intersections
         // Construct a subset of boundary segments, consisting of the subset between the previous valid ray intersection and the next valid ray intersection

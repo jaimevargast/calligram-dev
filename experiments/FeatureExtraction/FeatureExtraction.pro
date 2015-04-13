@@ -16,13 +16,15 @@ SOURCES +=  main.cpp\
             mainwindow.cpp \
             Viewer.cpp \
     stroke.cpp \
-    boundary.cpp
+    boundary.cpp \
+    boundarysegment.cpp
 
 HEADERS  += mainwindow.h \
             Viewer.h \
             marchingsquares.h \
     stroke.h \
-    boundary.h
+    boundary.h \
+    boundarysegment.h
 
 FORMS    += mainwindow.ui \
             Viewer.ui

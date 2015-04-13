@@ -21,6 +21,7 @@
 #include "marchingsquares.h"
 #include "stroke.h"
 #include "boundary.h"
+#include "boundarysegment.h"
 
 
 
@@ -299,30 +300,31 @@ void Viewer::computeDistanceStrokeToBoundary(Stroke * s, bool fix)
     i2 = bnd->closestIntersection(r).first;
 
     // Split boundary
-    QVector<QLineF> segment1 = bnd->getSegment(i1,i2);
-    QVector<QLineF> segment2 = bnd->getSegment(i2,i1);
+    segment1 = bnd->getSegment(i1,i2);
+    segment2 = bnd->getSegment(i2,i1);
 
     rays = parametrizedBoundaryIntersection(segment1,strokes[0]->leftRayset(),fix);
     rays += parametrizedBoundaryIntersection(segment2,strokes[0]->rightRayset(),fix);
 }
 
-QVector<QLineF> Viewer::parametrizedBoundaryIntersection(const QVector<QLineF> &seg, QVector<QLineF> &rayset, bool fix)
+QVector<QLineF> Viewer::parametrizedBoundaryIntersection(boundarySegment seg, QVector<QLineF> rayset, bool fix)
 {
     QMap<int,int> riMap;
+    QMap<int,qreal> rtMap;
     QVector<int> aux;
     QVector<QPair<int,QPointF>> temp;
     QVector<QLineF> answer;
 
     QPointF * p = new QPointF();
     QLineF dummy;
-    qreal d,mind;
+    qreal d,mind,t;
     int k;
 
     for (int i=0; i<rayset.size(); i++)
     {
-        for (int j=0; j<seg.size(); j++)
+        for (int j=0; j<seg.lines.size(); j++)
         {
-            if(rayset[i].intersect(seg[j],p)==QLineF::BoundedIntersection)
+            if(rayset[i].intersect(seg.lines[j],p)==QLineF::BoundedIntersection)
             {
                 temp.append(qMakePair(j,*p));
 
@@ -346,6 +348,8 @@ QVector<QLineF> Viewer::parametrizedBoundaryIntersection(const QVector<QLineF> &
                 }
             }
             riMap.insert(i,temp[k].first);                          //Ray i intersects with boundary segment j
+            t = seg.t_at_point(temp[k].second,temp[k].first);
+            rtMap.insert(i,t);
             aux.push_back(temp[k].first);
             answer.append(QLineF(rayset[i].p1(),temp[k].second));
         }
@@ -377,26 +381,6 @@ QVector<QLineF> Viewer::parametrizedBoundaryIntersection(const QVector<QLineF> &
             }
         }
 
-//        //Processing: /// NOT DOING THIS ANYMORE
-//        // 1. Detect and mark inversions
-//        qSort(aux.begin(), aux.end());
-//        k=0;
-//        for (QMap<int,int>::iterator it=riMap.begin(); it!=riMap.end(); ++it)
-//        {
-//                if (it.value()!=-1)
-//                {
-//                    if(it.value()!=aux[k])
-//                    {
-//                        it.value() = -1;
-//                    }
-//                    k++;
-//                }
-
-//        }
-
-
-
-
         // 2. Fix inversions and points with no intersections
         // Construct a subset of boundary segments, consisting of the subset between the previous valid ray intersection and the next valid ray intersection
         int chunk_start,chunk_end;
@@ -419,58 +403,68 @@ QVector<QLineF> Viewer::parametrizedBoundaryIntersection(const QVector<QLineF> &
                 if(it2!=riMap.end())
                     chunk_end = it2.value();
                 else
-                    chunk_end = seg.size()-1;
+                    chunk_end = seg.lines.size()-1;
 
                 subset.insert(it.key(),qMakePair(chunk_start,chunk_end));
             }
         }
 
-        //For each pointdetected, compute shortest point-to-line (restricted to subset computed above)
+        //For each conflicting ray detected, compute shortest point-to-line (restricted to subset computed above)
         for (QMap<int,QPair<int,int>>::iterator it=subset.begin(); it!=subset.end(); ++it)
         {
             mind = 100000000;
             for (int i=it.value().first; i<=it.value().second; i++)
             {
-                dummy = pointToLineDist(rayset[it.key()].p1(),seg[i]);
+                dummy = pointToLineDist(rayset[it.key()].p1(),seg.lines[i]);
                 d=dummy.length();
                 if(d<mind)
                 {
                     mind = d;
                     answer[it.key()].setP2(dummy.p2());
+                    t = seg.t_at_point(dummy.p2(),i);
+                    rtMap.insert(it.key(),t);
                 }
             }
         }
 
-        //Compute shortest distance to point for subsets
-        for (QMap<int,QPair<int,int>>::iterator it=subset.begin(); it!=subset.end(); ++it)
+        //Smooth t's and extract points
+        smooth_t(rtMap,10);
+
+        for (auto it=rtMap.begin(); it!=rtMap.end(); ++it)
         {
-            mind = 100000000;
-            for (int i=it.value().first; i<=it.value().second; i++)
-            {
-                dummy.setPoints(rayset[it.key()].p1(),seg[i].p1());      //point to point distance
-                d=dummy.length();
-                if(d<mind)
-                {
-                    mind = d;
-                    answer[it.key()].setP2(seg[i].p1());
-                }
-                if(i==it.value().second)
-                {
-                    dummy.setPoints(rayset[it.key()].p1(),seg[i].p2());      //point to point distance
-                    d=dummy.length();
-                    if(d<mind)
-                    {
-                        mind=d;
-                        k=i;
-                        answer[it.key()].setP2(seg[i].p2());
-                    }
-                }
-            }
+            answer[it.key()].setP2(seg.point_at_t(it.value()));
         }
     }
 
     return answer;
 }
+
+void Viewer::smooth_t(QMap<int,qreal> &map, int iterations) //1-D laplacian smoothing of t
+{
+    qreal t1,t2;
+    for (int i=0; i<iterations; i++)
+    {
+        for (QMap<int,qreal>::iterator it=map.begin(); it!=map.end(); ++it)
+        {
+            if(it!=map.begin())
+            {
+                if(++it==map.end())
+                {
+                    break;
+                }
+                --it;          // go back two (because i advanced it above)
+                --it;
+                t1 = it.value();
+                ++it;           // go forward two
+                ++it;
+                t2 = it.value();
+                --it;          // return to position
+                it.value() = (t1+t2)/2;
+            }
+        }
+    }
+}
+
 
 QLineF Viewer::pointToLineDist(const QPointF &p, const QLineF &l)
 {

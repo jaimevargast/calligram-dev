@@ -3,9 +3,12 @@
 #include <QGLWidget>
 #include <QVector>
 #include <Eigen/Dense>
+#include "boundarysegment.h"
+
 
 class Stroke;
 class Boundary;
+class boundarySegment;
 
 namespace Ui {
 class Viewer;
@@ -26,14 +29,15 @@ public:
     void keyPressEvent(QKeyEvent *);
     void mousePressEvent(QMouseEvent *);
     void computeDistanceStrokeToBoundary(Stroke *, bool);
-    QVector<QLineF> parametrizedBoundaryIntersection(const QVector<QLineF>&, QVector<QLineF>&, bool);
+    QVector<QLineF> parametrizedBoundaryIntersection(boundarySegment, QVector<QLineF>, bool);
     QLineF pointToLineDist(const QPointF &, const QLineF &);
     void clearAll();
+    void smooth_t(QMap<int,qreal>&,int);
 
 
     //QVector<QPolygonF> polys;
     QVector<MyQImage> images;
-    QPolygonF points;    
+    QPolygonF points;
     Eigen::MatrixXd img_matrix;
 
     Boundary * bnd;
@@ -41,7 +45,8 @@ public:
     //QVector<QLineF> lBoundary;
     QVector<Stroke*> strokes;    
     QVector<QLineF> rays;
-
+    boundarySegment segment1;
+    boundarySegment segment2;
 
 private:
     Ui::Viewer *ui;

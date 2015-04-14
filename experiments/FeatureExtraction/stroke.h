@@ -4,8 +4,9 @@
 #include <QPolygonF>
 #include <QLineF>
 #include <QPointF>
+#include "planarcurve.h"
 
-class Stroke
+class Stroke : public PlanarCurve
 {
     struct strokePoint
     {
@@ -15,8 +16,11 @@ class Stroke
     };
 
     QPolygonF path;
-    QVector<QPointF> lineNormals;
+//    QVector<QPointF> lineNormals;
     QVector<Stroke::strokePoint> points;
+
+//    qreal tot_length;
+    //QMap<int,qreal> cumulativeLength;
 
     friend class Viewer;
 

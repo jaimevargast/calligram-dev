@@ -21,7 +21,7 @@
 #include "marchingsquares.h"
 #include "stroke.h"
 #include "boundary.h"
-#include "boundarysegment.h"
+#include "planarcurve.h"
 
 
 
@@ -64,7 +64,7 @@ void Viewer::paintEvent(QPaintEvent *)
 
     painter.save();
     painter.translate(2,2);
-    painter.setPen(QPen(QColor(0,0,0,128), 5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter.setPen(QPen(QColor(0,0,0,128), 30, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter.drawPoints(points);
     painter.restore();
     painter.setPen(QPen(Qt::blue, 5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
@@ -197,10 +197,11 @@ void Viewer::keyPressEvent(QKeyEvent *event)
         for(auto p : fm2path) path << QPoint(p[0], p[1]);
 
         // Post-process path
-        path = smoothPolygon(resamplePolygon(path,shape.width() * 0.25), 2);
+        //path = smoothPolygon(resamplePolygon(path,shape.width() * 0.25), 2);
+        path = smoothPolygon(resamplePolygon(path,100),2);
 
         // Make stroke and rays, and save
-        Stroke * s = new Stroke(path);
+        Stroke * s = new Stroke(path);        
         strokes.append(s);
 
 
@@ -221,6 +222,7 @@ void Viewer::keyPressEvent(QKeyEvent *event)
 
             images << MyQImage(strokeImage);
         }
+
     }
 
     //Extract Boundary
@@ -249,6 +251,21 @@ void Viewer::keyPressEvent(QKeyEvent *event)
     if(event->key() == Qt::Key_U)
     {
         computeDistanceStrokeToBoundary(strokes[0],0);
+    }
+
+    if(event->key() == Qt::Key_K) // Compute and Visualize Curvature
+    {
+        rays.clear();
+        if(!strokes.empty())
+        {
+            QVector<qreal> ks = strokes[0]->k_signature();
+            rays = strokes[0]->leftRayset();
+
+            for (int i=0; i<ks.size(); i++)
+            {
+                rays[i].setLength(-ks[i]*100); // -k to reverse direction of normal so that it points in correct direction of curvature value, 100 to exaggerate value and visualize
+            }
+        }
     }
 
 
@@ -307,7 +324,7 @@ void Viewer::computeDistanceStrokeToBoundary(Stroke * s, bool fix)
     rays += parametrizedBoundaryIntersection(segment2,strokes[0]->rightRayset(),fix);
 }
 
-QVector<QLineF> Viewer::parametrizedBoundaryIntersection(boundarySegment seg, QVector<QLineF> rayset, bool fix)
+QVector<QLineF> Viewer::parametrizedBoundaryIntersection(PlanarCurve seg, QVector<QLineF> rayset, bool fix)
 {
     QMap<int,int> riMap;
     QMap<int,qreal> rtMap;

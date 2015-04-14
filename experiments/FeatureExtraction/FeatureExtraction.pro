@@ -17,14 +17,14 @@ SOURCES +=  main.cpp\
             Viewer.cpp \
     stroke.cpp \
     boundary.cpp \
-    boundarysegment.cpp
+    planarcurve.cpp
 
 HEADERS  += mainwindow.h \
             Viewer.h \
             marchingsquares.h \
     stroke.h \
     boundary.h \
-    boundarysegment.h
+    planarcurve.h
 
 FORMS    += mainwindow.ui \
             Viewer.ui

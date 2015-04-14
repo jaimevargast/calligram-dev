@@ -1,4 +1,5 @@
 #include "stroke.h"
+#include "planarcurve.h"
 #include <QPolygonF>
 #include <QPointF>
 #include <QLineF>
@@ -7,14 +8,14 @@
 Stroke::Stroke()
 {
     path.clear();
-    lineNormals.clear();
+    //lineNormals.clear();
     points.clear();
 }
 
-Stroke::Stroke(QPolygonF s)
-{
+Stroke::Stroke(QPolygonF s) : PlanarCurve(s)
+{        
     path = s;
-    lineNormals.clear();
+    //lineNormals.clear();
     points.clear();
     makeRays();
 }
@@ -28,6 +29,7 @@ Stroke::~Stroke()
 
 void Stroke::makeRays()
 {
+    QVector<QPointF> lineNormals;
     qreal dx,dy;
     qreal lx,ly,rx,ry;
     QLineF line;

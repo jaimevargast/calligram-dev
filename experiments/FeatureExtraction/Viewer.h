@@ -3,12 +3,12 @@
 #include <QGLWidget>
 #include <QVector>
 #include <Eigen/Dense>
-#include "boundarysegment.h"
+#include "planarcurve.h"
 
 
 class Stroke;
 class Boundary;
-class boundarySegment;
+class PlanarCurve;
 
 namespace Ui {
 class Viewer;
@@ -29,7 +29,7 @@ public:
     void keyPressEvent(QKeyEvent *);
     void mousePressEvent(QMouseEvent *);
     void computeDistanceStrokeToBoundary(Stroke *, bool);
-    QVector<QLineF> parametrizedBoundaryIntersection(boundarySegment, QVector<QLineF>, bool);
+    QVector<QLineF> parametrizedBoundaryIntersection(PlanarCurve, QVector<QLineF>, bool);
     QLineF pointToLineDist(const QPointF &, const QLineF &);
     void clearAll();
     void smooth_t(QMap<int,qreal>&,int);
@@ -45,8 +45,8 @@ public:
     //QVector<QLineF> lBoundary;
     QVector<Stroke*> strokes;    
     QVector<QLineF> rays;
-    boundarySegment segment1;
-    boundarySegment segment2;
+    PlanarCurve segment1;
+    PlanarCurve segment2;
 
 private:
     Ui::Viewer *ui;

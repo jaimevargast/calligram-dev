@@ -15,6 +15,7 @@
 #include <QStringList>
 #include <QLineF>
 #include <QtAlgorithms>
+#include <QtMath>
 
 
 #include "libfastmarching.h"
@@ -23,6 +24,7 @@
 #include "boundary.h"
 #include "planarcurve.h"
 
+#define SAMPLESIZE 100
 
 
 Viewer::Viewer(QWidget *parent) : QGLWidget(parent), ui(new Ui::Viewer)
@@ -76,12 +78,25 @@ void Viewer::paintEvent(QPaintEvent *)
 
     painter.setPen(QPen(Qt::green,1));
 
-    if (!rays.empty())
+    if (!lrays.empty())
     {
-        for (auto ray: rays)
+        for (auto ray: lrays)
         {
             painter.drawLine(ray);
         }
+    }
+    if (!rrays.empty())
+    {
+        for (auto ray: rrays)
+        {
+            painter.drawLine(ray);
+        }
+    }
+
+    if(!sPoly.empty())
+    {
+        painter.setPen(QPen(Qt::cyan,3));
+        painter.drawPolygon(sPoly);
     }
 
 }
@@ -129,8 +144,11 @@ void Viewer::clearAll()
     points.clear();
     bnd=NULL;
     bndPoly.clear();
+    sPoly.clear();
     strokes.clear();
-    rays.clear();
+    //rays.clear();
+    lrays.clear();
+    rrays.clear();
 }
 
 void Viewer::mousePressEvent(QMouseEvent *event)
@@ -166,7 +184,8 @@ void Viewer::keyPressEvent(QKeyEvent *event)
     {
         clearAll();
         images.clear();
-        images << MyQImage(QImage(QFileDialog::getOpenFileName(0,"Load image", "", "*.png")));
+        filename = QFileDialog::getOpenFileName(0,"Load image", "", "*.png");
+        images << MyQImage(QImage(filename));
 
         // Convert to double matrix
         img_matrix = Eigen::MatrixXd::Zero(images.front().height(), images.front().width());
@@ -196,9 +215,12 @@ void Viewer::keyPressEvent(QKeyEvent *event)
         QPolygon path;
         for(auto p : fm2path) path << QPoint(p[0], p[1]);
 
+
+
         // Post-process path
-        //path = smoothPolygon(resamplePolygon(path,shape.width() * 0.25), 2);
-        path = smoothPolygon(resamplePolygon(path,100),2);
+        //path = smoothPolygon(resamplePolygon(path,shape.width() * 0.25), 2);        
+        path = resamplePolygon(path,SAMPLESIZE);
+        path << points.back().toPoint();
 
         // Make stroke and rays, and save
         Stroke * s = new Stroke(path);        
@@ -255,17 +277,107 @@ void Viewer::keyPressEvent(QKeyEvent *event)
 
     if(event->key() == Qt::Key_K) // Compute and Visualize Curvature
     {
-        rays.clear();
+        //rays.clear();
+        lrays.clear();
+        rrays.clear();
         if(!strokes.empty())
         {
             QVector<qreal> ks = strokes[0]->k_signature();
-            rays = strokes[0]->leftRayset();
+            lrays = strokes[0]->leftRayset();
 
             for (int i=0; i<ks.size(); i++)
             {
-                rays[i].setLength(-ks[i]*100); // -k to reverse direction of normal so that it points in correct direction of curvature value, 100 to exaggerate value and visualize
+                lrays[i].setLength(-ks[i]*100); // -k to reverse direction of normal so that it points in correct direction of curvature value, 100 to exaggerate value and visualize
             }
         }
+    }
+
+    //Save Features
+    if(event->key() == Qt::Key_F2)
+    {
+        computeDistanceStrokeToBoundary(strokes[0],1);      //ensure things are computed
+        //filename.append(".txt");
+        //QFile (filename);
+        //if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+          //  QTextStream out(&file);
+            QVector<qreal> thickness = strokes[0]->thickness();
+            QVector<qreal> curvature = strokes[0]->k_signature();
+
+            //Length -- TO DO : REWRITE AS RELATIVE
+            //out << strokes[0]->tot_length << ",";
+            //QTextStream(stdout) << "l:" << strokes[0]->tot_length << "\n";
+
+            //Orientation
+            // * * * TO DO
+
+            //Curviness - 20 values, i.e. every 5 points
+            qreal t=0;
+            for (int i=0; i<curvature.size(); i++)
+            {
+                t+= curvature[i];
+                if((i!=0)&&(i%5==0))
+                {
+            //        out << t << ",";
+                    QTextStream(stdout) << "k "<< i << ":" << t << "\n";
+                    t=0;
+                    t+= curvature[i];
+                }
+            }
+
+
+            //Thickness - approximation by polygon area (join points of intersecting rays)
+            {
+                sPoly.clear();
+                for (int i=0; i<lrays.size(); i++)
+                {
+                    sPoly << lrays[i].p2();
+                }
+
+                for (int i=0; i<rrays.size(); i++)
+                {
+                    sPoly << rrays[i].p2();
+                }
+                sPoly << lrays[0].p2(); //make closed
+
+                //Compute Area
+                {
+                    qreal a=0;
+                    for (int i=0; i<sPoly.size(); i++)
+                    {
+                        a+=(sPoly[i].rx()*sPoly[i+1].ry()+sPoly[i].ry()*sPoly[i].rx());
+                    }
+                    a = qAbs(a/2);
+                    QTextStream(stdout) << "Area: " << a << "\n";
+                    QTextStream(stdout) << "Stroke Length: " << strokes[0]->tot_length << "\n";
+                    a = a/strokes[0]->tot_length;
+                    QTextStream(stdout) << "Stroke Thickness (area/length): " << a << "\n";
+                }
+
+            }
+
+            //Smoothness - sqared sum variation of thickness
+            {
+                qreal v=0;
+                for(int i=1; i<lrays.size(); i++)
+                {
+                    int curr_l = i;
+                    int prev_l = curr_l-1;
+                    int curr_r = (rrays.size()-1)-i;
+                    int prev_r = curr_r+1;
+
+                    qreal curr_th = lrays[curr_l].length() + rrays[curr_r].length();
+                    qreal prev_th = lrays[prev_l].length() + rrays[prev_r].length();
+
+                    v += qPow(curr_th/prev_th-1,2);
+
+                }
+                v = sqrt(v);
+
+                QTextStream(stdout) << "Stroke Smoothness: " << v << "\n";
+            }
+        }
+
     }
 
 
@@ -306,7 +418,9 @@ void Viewer::computeDistanceStrokeToBoundary(Stroke * s, bool fix)
     QPair<int,QPointF> ans;
     QVector<QPair<int,QPointF>> ps;
     ps.clear();
-    rays.clear();
+    //rays.clear();
+    lrays.clear();
+    rrays.clear();
 
     // Compute splice points
     int i1,i2;
@@ -320,8 +434,8 @@ void Viewer::computeDistanceStrokeToBoundary(Stroke * s, bool fix)
     segment1 = bnd->getSegment(i1,i2);
     segment2 = bnd->getSegment(i2,i1);
 
-    rays = parametrizedBoundaryIntersection(segment1,strokes[0]->leftRayset(),fix);
-    rays += parametrizedBoundaryIntersection(segment2,strokes[0]->rightRayset(),fix);
+    lrays = parametrizedBoundaryIntersection(segment1,strokes[0]->leftRayset(),fix);
+    rrays = parametrizedBoundaryIntersection(segment2,strokes[0]->rightRayset(),fix);
 }
 
 QVector<QLineF> Viewer::parametrizedBoundaryIntersection(PlanarCurve seg, QVector<QLineF> rayset, bool fix)

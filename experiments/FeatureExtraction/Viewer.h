@@ -42,9 +42,15 @@ public:
 
     Boundary * bnd;
     QPolygonF bndPoly;
-    //QVector<QLineF> lBoundary;
-    QVector<Stroke*> strokes;    
-    QVector<QLineF> rays;
+    QPolygonF sPoly;
+
+    QVector<Stroke*> strokes;
+
+
+    QString filename;
+
+    QVector<QLineF> lrays;
+    QVector<QLineF> rrays;
     PlanarCurve segment1;
     PlanarCurve segment2;
 

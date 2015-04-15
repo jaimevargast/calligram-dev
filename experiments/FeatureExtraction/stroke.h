@@ -10,17 +10,14 @@ class Stroke : public PlanarCurve
 {
     struct strokePoint
     {
-        QPointF p;
-        QLineF lRay;
-        QLineF rRay;
+        QPointF p;        
+        QLineF lRay;        
+        QLineF rRay;        
     };
 
     QPolygonF path;
-//    QVector<QPointF> lineNormals;
     QVector<Stroke::strokePoint> points;
 
-//    qreal tot_length;
-    //QMap<int,qreal> cumulativeLength;
 
     friend class Viewer;
 
@@ -34,6 +31,7 @@ public:
     QLineF rayFinish();
     QVector<QLineF> leftRayset();
     QVector<QLineF> rightRayset();
+    QVector<qreal> thickness();
 
 private:
     void makeRays();

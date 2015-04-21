@@ -104,8 +104,8 @@ QVector<qreal> PlanarCurve::k_signature()
         a = curvature(lines[i-1],lines[i]);
         answer[i] = a;
     }
-    for (auto i : answer)
-        QTextStream(stdout) << "k=" << i << "\n";
+//    for (auto i : answer)
+//        QTextStream(stdout) << "k=" << i << "\n";
     return answer;
 }
 

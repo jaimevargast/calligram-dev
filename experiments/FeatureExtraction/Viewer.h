@@ -34,6 +34,9 @@ public:
     void clearAll();
     void smooth_t(QMap<int,qreal>&,int);
 
+    void extractBoundary();
+    bool saveFeatures(QString);
+
 
     //QVector<QPolygonF> polys;
     QVector<MyQImage> images;

@@ -36,6 +36,7 @@ public:
 
     void extractBoundary();
     bool saveFeatures(QString);
+    bool saveStroke_and_Boundary();
 
 
     //QVector<QPolygonF> polys;

@@ -386,6 +386,7 @@ void Viewer::keyPressEvent(QKeyEvent *event)
         }
 
         saveFeatures(fstring);
+        saveStroke_and_Boundary();
 
     }
 
@@ -395,10 +396,35 @@ void Viewer::keyPressEvent(QKeyEvent *event)
     update();
 }
 
+bool Viewer::saveStroke_and_Boundary()
+{
+    QString filesave = filename;
+    filesave.replace(QString(".png"),QString("stroke.txt"));
+    QFile file(filesave);
+
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QTextStream out(&file);
+        for (int i=0; i<strokes.size(); i++)
+        {
+            QPolygonF sp = strokes[i]->path;
+            out << "Stroke " << i << "\n";
+            for(auto p:sp)
+                out << p.rx() << "," << p.ry() << "\n";
+        }
+
+        file.close();
+        return 1;
+    }
+    return 0;
+
+}
+
 bool Viewer::saveFeatures(QString s)
 {
-    filename.replace(QString(".png"),QString(".txt"));
-    QFile file(filename);
+    QString filesave = filename;
+    filesave.replace(QString(".png"),QString(".txt"));
+    QFile file(filesave);
 
     if (file.open(QIODevice::WriteOnly | QIODevice::Text))
     {

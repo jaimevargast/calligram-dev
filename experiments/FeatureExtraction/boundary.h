@@ -10,6 +10,7 @@ class Boundary
 {
     QPolygonF boundaryPoly;
     QVector<QLineF> boundaryLines;
+    //bool isHole;
 
 public:
     Boundary();

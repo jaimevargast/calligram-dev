@@ -24,7 +24,8 @@ HEADERS  += mainwindow.h \
             marchingsquares.h \
     stroke.h \
     boundary.h \
-    planarcurve.h
+    planarcurve.h \
+    png2poly.h
 
 FORMS    += mainwindow.ui \
             Viewer.ui

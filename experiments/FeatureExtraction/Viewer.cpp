@@ -17,7 +17,7 @@
 #include <QtAlgorithms>
 #include <QtMath>
 
-
+#include "png2poly.h"
 #include "libfastmarching.h"
 #include "marchingsquares.h"
 #include "stroke.h"
@@ -188,7 +188,10 @@ void Viewer::keyPressEvent(QKeyEvent *event)
         images << MyQImage(QImage(filename));
 
         // Convert to double matrix
+
         img_matrix = Eigen::MatrixXd::Zero(images.front().height(), images.front().width());
+
+
         for(int y = 0; y < images.front().height(); y++) {
             for(int x = 0; x < images.front().width(); x++) {
                 if(images.front().pixel(x,y) > qRgb(0,0,0))
@@ -217,7 +220,7 @@ void Viewer::keyPressEvent(QKeyEvent *event)
 
         // Post-process path
         //path = smoothPolygon(resamplePolygon(path,shape.width() * 0.25), 2);        
-        path = resamplePolygon(path,SAMPLESIZE);
+        path = smoothPolygon(resamplePolygon(path,SAMPLESIZE),3);
         path << points.back().toPoint();
 
         // Make stroke and rays, and save
@@ -376,7 +379,7 @@ void Viewer::keyPressEvent(QKeyEvent *event)
                 t+= curvature[i];
                 if((i!=0)&&(i%5==0))
                 {
-                    out << t << ",";
+                    out << "," << t;
                     QTextStream(stdout) << "k "<< i << ":" << t << "\n";
 
                     t=0;
@@ -655,16 +658,26 @@ QLineF Viewer::pointToLineDist(const QPointF &p, const QLineF &l) //Returns shor
 }
 
 void Viewer::extractBoundary()
-{
-    if(bnd==NULL)
-    {
-        QPolygonF b;
-        for(auto pixel : MarchingSquares(img_matrix,1.0).march())
-            b << QPointF(pixel.x(),pixel.y());
+{    
+//    if(bnd==NULL)
+//    {
+//        QPolygonF b;
+//        for(auto pixel : MarchingSquares(img_matrix,1.0).march())
+//            b << QPointF(pixel.x(),pixel.y());
 
-        //b = resamplePolygon(b,100);
+//        //b = resamplePolygon(b,100);
 
-        bnd = new Boundary(b);
-        bndPoly = bnd->getPolygon();
-    }
+//        bnd = new Boundary(b);
+//        bndPoly = bnd->getPolygon();
+//    }
+//    QVector<png2poly::poly> ans;
+//    ans = png2poly(img_matrix).mask2poly();
+//    bndPoly = ans[0].p;
+//    QTextStream(stdout) << "Polygon:";
+//    for (auto point : bndPoly)
+//    {
+//        QTextStream(stdout) << point.rx() << "," << point.ry() << "\n";
+//    }
+
+
 }

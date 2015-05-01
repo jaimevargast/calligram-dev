@@ -37,5 +37,3 @@ CONFIG(debug, debug|release) {CFG = debug} else {CFG = release}
 # Libraries
 INCLUDEPATH += $$PWD/../libfastmarching
 LIBS += $$PWD/../libfastmarching/$$CFG/lib/libfastmarching.lib
-
-

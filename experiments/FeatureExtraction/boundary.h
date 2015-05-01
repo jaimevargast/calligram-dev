@@ -22,6 +22,7 @@ public:
     QVector<QLineF> getLines() { return boundaryLines; }
     QVector<QLineF> getSegment(int,int);
     QPair<int,QPointF> closestIntersection(const QLineF&);      // Given a ray, returns index into boundaryLines as well as coordinates of nearest intersection, if it exists; -1 otherwise
+    qreal area();
 
 private:
     void makeLines();

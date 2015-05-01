@@ -7,9 +7,11 @@
 #include<QPolygonF>
 
 class Viewer;
+class Stroke;
 
 class PlanarCurve
 {
+    friend class Stroke;
     friend class Viewer;
 
     QVector<QLineF> lines;

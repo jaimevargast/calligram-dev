@@ -34,11 +34,11 @@ PlanarCurve::~PlanarCurve()
 void PlanarCurve::computeLength(void)
 {
     tot_length=0;
-    cumulativeLength.clear();
+    cumulativeLength.clear();    
     for (int ix=0; ix<lines.size(); ix++)
     {
         tot_length += lines[ix].length();
-        cumulativeLength.insert(ix,tot_length);
+        cumulativeLength.insert(ix,tot_length);        
     }
 }
 
@@ -67,8 +67,9 @@ QPointF PlanarCurve::point_at_t(qreal t)
         qreal d = tot_length*t;
         int ix=0;
 
-        while(cumulativeLength.value(ix)<=d)
+        while(cumulativeLength.value(ix)<d)
         {
+
             ix++;
         }
 

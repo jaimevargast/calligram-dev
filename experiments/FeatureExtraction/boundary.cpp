@@ -3,6 +3,7 @@
 #include <QPolygonF>
 #include <QLineF>
 #include <QPair>
+#include <QTextStream>
 
 Boundary::Boundary()
 {
@@ -128,4 +129,20 @@ void Boundary::makeClockwise()
         qCopyBackward(boundaryPoly.begin(), boundaryPoly.end(), temp.end());
         boundaryPoly=temp;
     }
+}
+
+qreal Boundary::area()
+{
+    qreal a=0;
+    qreal aux1=0;
+    qreal aux2=0;
+    for (int i=0; i<boundaryPoly.size()-1; i++)
+    {
+        aux1 += (boundaryPoly[i].rx()   *  boundaryPoly[i+1].ry());
+        aux2 += (boundaryPoly[i+1].rx() *  boundaryPoly[i].ry());
+    }
+    a = qAbs(aux1 + (boundaryPoly.last().rx() * boundaryPoly.front().ry()) - aux2 - (boundaryPoly.front().rx() * boundaryPoly.last().ry()));
+    a = a/2;
+
+    return a;
 }

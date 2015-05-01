@@ -178,8 +178,8 @@ struct png2poly
 
         curve << QPointF(ind2,ind1);
         curve << QPointF(ind2+1,ind1);
-        QTextStream(stdout) << "<<" << ind1 << "," << ind2 << "\n";
-        QTextStream(stdout) << "<<" << ind1 << "," << ind2+1 << "\n";
+//        QTextStream(stdout) << "<<" << ind1 << "," << ind2 << "\n";
+//        QTextStream(stdout) << "<<" << ind1 << "," << ind2+1 << "\n";
 
 
         seg1.coeffRef(ind1,ind2) = 0;
@@ -206,7 +206,7 @@ struct png2poly
                     seg1.coeffRef(ind1,ind2)=0;
                     seg1.prune(0,0);
                     curve << QPointF(ind2+pos.second,ind1);
-                   QTextStream(stdout) << "<<" << ind1 << "," << ind2+pos.second << "\n";
+                   //QTextStream(stdout) << "<<" << ind1 << "," << ind2+pos.second << "\n";
                 }
 
                 else if (seg2.coeff(ind1-1,ind2+pos.second))
@@ -217,7 +217,7 @@ struct png2poly
                     seg2.coeffRef(ind1,ind2) = 0;
                     seg2.prune(0,0);
                     curve << QPointF(ind2,ind1);
-                    QTextStream(stdout) << "<<" << ind1 << "," << ind2 << "\n";
+                    //QTextStream(stdout) << "<<" << ind1 << "," << ind2 << "\n";
                     last1=false;
                 }
 
@@ -228,7 +228,7 @@ struct png2poly
                     seg2.coeffRef(ind1,ind2) = 0;
                     seg2.prune(0,0);
                     curve << QPointF(ind2,ind1+1);
-                    QTextStream(stdout) << "<<" << ind1+1 << "," << ind2 << "\n";
+                    //QTextStream(stdout) << "<<" << ind1+1 << "," << ind2 << "\n";
                     last1=false;
                 }
                 else
@@ -245,7 +245,7 @@ struct png2poly
                     seg2.coeffRef(ind1,ind2) = 0;
                     seg2.prune(0,0);
                     curve << QPointF(ind2,ind1+pos.second);
-                    QTextStream(stdout) << "<<" << ind1+pos.second << "," << ind2 << "\n";
+//                    QTextStream(stdout) << "<<" << ind1+pos.second << "," << ind2 << "\n";
                 }
 
                 else if (seg1.coeff(ind1+pos.second,ind2-1))
@@ -256,7 +256,7 @@ struct png2poly
                     seg1.coeffRef(ind1,ind2) = 0;
                     seg1.prune(0,0);
                     curve << QPointF(ind2,ind1);
-                    QTextStream(stdout) << "<<" << ind1 << "," << ind2 << "\n";
+//                    QTextStream(stdout) << "<<" << ind1 << "," << ind2 << "\n";
                     last1 = true;
                 }
 
@@ -267,7 +267,7 @@ struct png2poly
                     seg1.coeffRef(ind1,ind2) = 0;
                     seg1.prune(0,0);
                     curve << QPointF(ind2+1,ind1);
-                    QTextStream(stdout) << "<<" << ind1 << "," << ind2+1 << "\n";
+                    //QTextStream(stdout) << "<<" << ind1 << "," << ind2+1 << "\n";
                     last1 = true;
                 }
 
